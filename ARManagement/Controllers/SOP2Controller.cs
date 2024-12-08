@@ -109,7 +109,6 @@ namespace ARManagement.Controllers
             return Ok(apiResult);
         }
 
-
         /// <summary>
         /// 26. SOP頁面儲存設定
         /// </summary>
@@ -125,11 +124,6 @@ namespace ARManagement.Controllers
 
             try
             {
-                #region 判斷Token是否過期或無效
-                //if (tokenExpired)
-                //{
-                //    apiResult.Code = "1001"; //Token過期或無效
-                //    apiResult.Message = _responseCodeHelper.GetResponseCodeString(apiResult.Code);
                 //    return Ok(apiResult);
                 //}
                 #endregion
@@ -233,12 +227,9 @@ namespace ARManagement.Controllers
                     };
 
                     var sopId = await _baseRepository.AddOneByCustomTable(addSOP_Dict, "SOP2", "SOP2Id");
-
-                    //判斷SOP資料夾是否存在
                     var sopPath = Path.Combine(sopRootPath, sopId.ToString());
                     folderFunction.CreateFolder(sopPath, 0);
 
-                    // 處理圖片儲存
                     if (!string.IsNullOrEmpty(sopImageName))
                     {
                         folderFunction.SavePathFile(addSOP.SOP2ImageObj, sopPath, sopImageName);
@@ -248,7 +239,6 @@ namespace ARManagement.Controllers
                     {
                         folderFunction.SavePathFile(addSOP.SOP2RemarkImageObj, sopPath, remarkImageName);
                     }
-
                 }
                 #endregion
 
@@ -270,11 +260,9 @@ namespace ARManagement.Controllers
                 }
                 if (deleteSOP_Dicts.Count > 0)
                 {
-                    //刪除SOP
                     await _baseRepository.UpdateMutiByCustomTable(deleteSOP_Dicts, "SOP2", "\"SOP2Id\" = @SOP2Id");
                 }
 
-                //刪除SOP資料底下所有子資料夾、檔案
                 foreach (var deleteSOP in deleteSOPs)
                 {
                     var tempSOPPath = Path.Combine(sopRootPath, deleteSOP.SOP2Id.ToString());
@@ -285,18 +273,14 @@ namespace ARManagement.Controllers
                         directoryInfo.Delete(true);
                     }
                 }
-
                 #endregion
 
                 #region 找出要修改的SOP
                 var updateSOPs = post.SOP2s.Where(x => x.SOP2Id != 0 && x.Deleted == 0).ToList();
-
-                //取得所有SOP資料
                 var sopWhere = $@"""Deleted"" = 0 AND ""SOP2Id"" = ANY (@SOP2Ids)";
                 var tempSops = await _baseRepository.GetAllAsync<SOP2>("SOP2", sopWhere, new { SOP2Ids = updateSOPs.Select(x => x.SOP2Id).ToList() });
                 foreach (var updateSOP in updateSOPs)
                 {
-                    //圖片
                     string? sopImageName = null;
                     string? remarkImageName = null;
 
@@ -332,7 +316,6 @@ namespace ARManagement.Controllers
                         {
                             updateSOP_Dict.Add("@SOP2Image", null);
                         }
-                    }
 
                     if (!string.IsNullOrEmpty(remarkImageName))
                     {
@@ -344,7 +327,6 @@ namespace ARManagement.Controllers
                         {
                             updateSOP_Dict.Add("@SOP2RemarkImage", null);
                         }
-                    }
 
                     await _baseRepository.UpdateOneByCustomTable(updateSOP_Dict, "SOP2", "\"SOP2Id\" = @SOP2Id");
 
@@ -369,7 +351,6 @@ namespace ARManagement.Controllers
                     {
                         folderFunction.SavePathFile(updateSOP.SOP2RemarkImageObj, Path.Combine(sopRootPath, tempSelectSOP.SOP2Id.ToString()), remarkImageName);
                     }
-
                 }
                 #endregion
 
